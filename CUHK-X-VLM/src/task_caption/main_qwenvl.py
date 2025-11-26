@@ -4,7 +4,7 @@ from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from ..utils import qwenvl_inference
+from utils import qwenvl_inference
 import torch
 import gc
 import argparse
@@ -62,10 +62,10 @@ if __name__ == "__main__":
 
     file_list = os.listdir(data_dir)
 
-    output_dir = "CUHK-X-VLM/src/task_caption/predictions"
+    output_dir = f"CUHK-X-VLM/src/task_caption/predictions/{modality}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    output_csv = output_dir + f'/{modality}/pred_qwenvl{model_size}_new.csv'
+    output_csv = output_dir + f'/pred_qwenvl{model_size}_new.csv'
 
 
     # Check if output file exists and load processed results

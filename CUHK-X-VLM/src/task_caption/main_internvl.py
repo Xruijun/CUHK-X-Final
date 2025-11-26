@@ -1,6 +1,5 @@
 import os
 import csv
-
 from numpy.distutils.lib2def import output_def
 from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
@@ -63,10 +62,10 @@ if __name__ == "__main__":
 
     file_list = os.listdir(data_dir)
 
-    output_dir = "CUHK-X-VLM/src/task_caption/predictions"
+    output_dir = f"CUHK-X-VLM/src/task_caption/predictions/{modality}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    output_csv = output_dir +  f'/{modality}/pred_internvl{model_size}.csv'
+    output_csv = output_dir +  f'/pred_internvl{model_size}.csv'
 
 
     # Check if output file exists and load processed results

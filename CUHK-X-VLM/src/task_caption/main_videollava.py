@@ -56,10 +56,10 @@ if __name__ == "__main__":
 
     file_list = os.listdir(data_dir)
 
-    output_dir = "CUHK-X-VLM/src/task_caption/predictions"
+    output_dir = f"CUHK-X-VLM/src/task_caption/predictions/{modality}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    output_csv = output_dir + f'/{modality}/pred_videollava_new.csv'
+    output_csv = output_dir + f'/pred_videollava_new.csv'
 
     # Check if output file exists and load processed results
     processed_videos = []
