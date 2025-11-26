@@ -5,6 +5,9 @@ from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
 from transformers import VideoLlavaProcessor, VideoLlavaForConditionalGeneration
 import sys
+
+from Data_Organization.SM_data_video import output_csv
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import videochatr1_inference
 import torch
@@ -16,7 +19,6 @@ def read_csv_file(csv_path):
     Read a CSV file and return the content as a list of rows.
     """
     data = []
-    base_path = "/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/"
     try:
         # 读取CSV文件
         with open(csv_path, 'r', encoding='utf-8') as f:
@@ -25,7 +27,7 @@ def read_csv_file(csv_path):
             for row in reader:
                 if len(row) >= 3:  # 确保至少有3列
                     # 确保路径前添加基础路径
-                    path = os.path.join(base_path, row[0])
+                    path = row[0]
                     caption = row[1]
                     gt = row[2]
                     data.append([path, caption, gt])
@@ -59,34 +61,30 @@ def read_class_names(file_path):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--modality', type=str, default='rgb', help='depth, rgb, ir')
-    parser.add_argument('--task', type=str, default='1', help='1, 2')
-
     args = parser.parse_args()
     modality = args.modality  # 'depth', 'rgb', 'ir'
-    task = args.task  # '1', '2'
 
-    # if modality == 'rgb':
-    #     test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/video_data/video_GT_candidates/Color_GT_Candidates.csv'
-    # if modality == 'ir':
-    #     test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/video_data/video_GT_candidates/IR_GT_Candidates.csv'
     if modality == 'rgb':
-        test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_RGB_sequential.csv'
+        test_csv_path = 'GT_folder/LM_RGB_sequential.csv'
     elif modality == 'ir':
-        test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_IR_sequential.csv'
+        test_csv_path = 'GT_folder/LM_IR_sequential.csv'
     elif modality == 'depth':
-        test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_Depth_sequential.csv'
+        test_csv_path = 'GT_folder/LM_Depth_sequential.csv'
     elif modality == 'thermal':
-        test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_Thermal_sequential.csv'
+        test_csv_path = 'GT_folder/LM_Thermal_sequential.csv'
 
     # 读取类名文件
-    class_names_file = '/home/bufang/CUHK-X/src/task_caption1/class_names.txt'
+    class_names_file = 'class_names.txt'
     class_names_str = read_class_names(class_names_file)
     print(f"类名列表: {class_names_str}")
 
     test_data = read_csv_file(test_csv_path)
     print(f"Loaded {len(test_data)} samples from {test_csv_path}")
-    
-    output_csv = f'CUHK-X-VLM/src/task_caption1/predictions/{modality}/pred_videochatr1_new.csv'
+
+    output_dir = f"CUHK-X-VLM/src/task_caption1/predictions/{modality}"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    output_csv = output_dir + '/pred_videochatr1_new.csv'
     
     # 检查是否已有输出文件并加载已处理的结果
     results = []
@@ -110,14 +108,13 @@ if __name__ == "__main__":
 
 
     # initialize vlm
-    model_path = "OpenGVLab/VideoChat-R1_7B"
+    model_path = "Models/VideoChat-R1_7B"
     model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
         model_path, torch_dtype="auto", device_map="auto"
     )
     processor = AutoProcessor.from_pretrained(model_path)
 
-    if task == '1':
-        prompt = f"Question: What activity is the person performing in the video? You must choose only from the following activities: {class_names_str}. You can choose multiple activities if necessary. \nPlease answer with the activity name or names, separated by commas such as standing up, walking, mopping, walking, etc."
+    prompt = f"Question: What activity is the person performing in the video? You must choose only from the following activities: {class_names_str}. You can choose multiple activities if necessary. \nPlease answer with the activity name or names, separated by commas such as standing up, walking, mopping, walking, etc."
 
     # results, idx = [], 1
     idx = 1
@@ -174,7 +171,6 @@ if __name__ == "__main__":
             writer.writerow(["Path", "Logic", "vlm_result"])
             writer.writerows(results)
         print(f"Results have been saved to {output_csv}")
-        # raise ValueError
 
 
 

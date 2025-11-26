@@ -16,7 +16,6 @@ def read_csv_file(csv_path):
     Read a CSV file and return the content as a list of rows.
     """
     data = []
-    base_path = "/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/"
     try:
         # 读取CSV文件
         with open(csv_path, 'r', encoding='utf-8') as f:
@@ -25,7 +24,7 @@ def read_csv_file(csv_path):
             for row in reader:
                 if len(row) >= 3:  # 确保至少有3列
                     # 确保路径前添加基础路径
-                    path = os.path.join(base_path, row[0])
+                    path = row[0]
                     caption = row[1]
                     gt = row[2]
                     data.append([path, caption, gt])
@@ -59,34 +58,31 @@ def read_class_names(file_path):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--modality', type=str, default='rgb', help='depth, rgb, ir')
-    parser.add_argument('--task', type=str, default='1', help='1, 2')
-
     args = parser.parse_args()
-    modality = args.modality  # 'depth', 'rgb', 'ir'
-    task = args.task  # '1', '2'
 
-    # if modality == 'rgb':
-    #     test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/video_data/video_GT_candidates/Color_GT_Candidates.csv'
-    # if modality == 'ir':
-    #     test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/video_data/video_GT_candidates/IR_GT_Candidates.csv'
+    modality = args.modality  # 'depth', 'rgb', 'ir'
+
     if modality == 'rgb':
-        test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_RGB_sequential.csv'
+        test_csv_path = 'GT_folder/LM_RGB_sequential.csv'
     elif modality == 'ir':
-        test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_IR_sequential.csv'
+        test_csv_path = 'GT_folder/LM_IR_sequential.csv'
     elif modality == 'depth':
-        test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_Depth_sequential.csv'
+        test_csv_path = 'GT_folder/LM_Depth_sequential.csv'
     elif modality == 'thermal':
-        test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_Thermal_sequential.csv'
+        test_csv_path = 'GT_folder/LM_Thermal_sequential.csv'
 
     # 读取类名文件
-    class_names_file = '/home/bufang/CUHK-X/src/task_caption1/class_names.txt'
+    class_names_file = 'class_names.txt'
     class_names_str = read_class_names(class_names_file)
     print(f"类名列表: {class_names_str}")
 
     test_data = read_csv_file(test_csv_path)
     print(f"Loaded {len(test_data)} samples from {test_csv_path}")
-    
-    output_csv = f'CUHK-X-VLM/src/task_caption1/predictions/{modality}/pred_videollava.csv'
+
+    output_dir = f"CUHK-X-VLM/src/task_caption1/predictions/{modality}"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    output_csv = output_dir + '/pred_videollava.csv'
     
     # 检查是否已有输出文件并加载已处理的结果
     results = []
@@ -107,14 +103,11 @@ if __name__ == "__main__":
         print(f"已经处理了 {start_idx} 个样本，将从第 {start_idx+1} 个样本继续")
 
 
-
-
     # initialize vlm
-    model = VideoLlavaForConditionalGeneration.from_pretrained("LanguageBind/Video-LLaVA-7B-hf")
-    processor = VideoLlavaProcessor.from_pretrained("LanguageBind/Video-LLaVA-7B-hf")
+    model = VideoLlavaForConditionalGeneration.from_pretrained("Models/Video-LLaVA-7B-hf")
+    processor = VideoLlavaProcessor.from_pretrained("Models/Video-LLaVA-7B-hf")
 
-    if task == '1':
-        prompt = f"Question: What activity is the person performing in the video? You must choose only from the following activities: {class_names_str}. You can choose multiple activities if necessary. \nPlease answer with the activity name or names, separated by commas such as standing up, walking, mopping, walking, etc."
+    prompt = f"Question: What activity is the person performing in the video? You must choose only from the following activities: {class_names_str}. You can choose multiple activities if necessary. \nPlease answer with the activity name or names, separated by commas such as standing up, walking, mopping, walking, etc."
 
     # results, idx = [], 1
     idx = 1
@@ -123,10 +116,6 @@ if __name__ == "__main__":
     for i, row in enumerate(test_data):
         if i < start_idx:  # 跳过已处理的样本
             continue
-        
-#        if processed_count >= 2000:  # 添加100个样本的限制
-#            print("已处理100个样本，停止处理")
-#            break  
 
         print(row)
         video_path = row[0]
@@ -141,7 +130,6 @@ if __name__ == "__main__":
             query0 = "USER: <video>"+ prompt + " ASSISTANT:"
             res = videollava_inference(video_path, query0, model, processor)
 
-            # res = videollava_inference(video_path, prompt, model, processor)
             print(video_path)
             print(res)
         except torch.cuda.OutOfMemoryError:
@@ -174,7 +162,6 @@ if __name__ == "__main__":
             writer.writerow(["Path", "Logic", "vlm_result"])
             writer.writerows(results)
         print(f"Results have been saved to {output_csv}")
-        # raise ValueError
 
 
 

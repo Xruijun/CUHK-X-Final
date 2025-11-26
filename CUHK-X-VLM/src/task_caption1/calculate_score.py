@@ -118,7 +118,7 @@ if __name__ == "__main__":
     modality = args.modality  # 'depth', 'rgb', 'ir' 
    
     # 读取预测结果CSV文件
-    pred_path = f'CUHK-X-VLM/src/task_caption1/predictions/{modality}/pred_{method}_new.csv'
+    pred_path = f'CUHK-X-VLM/src/task_caption1/predictions/{modality}/pred_{method}.csv'
     data = read_csv_with_activities(pred_path)
     print(f"Loaded {len(data)} samples from {pred_path}")
     print(f"使用模型: {method}")
@@ -224,9 +224,10 @@ if __name__ == "__main__":
     
     # 保存评估结果
     results_dir = f'CUHK-X-VLM/src/task_caption1/scores/{modality}'
-    os.makedirs(results_dir, exist_ok=True)
+    if not os.path.exists(results_dir):
+        os.makedirs(results_dir, exist_ok=True)
     
-    output_csv = f'{results_dir}/{method}_activity_scores_new.csv'
+    output_csv = f'{results_dir}/{method}_activity_scores.csv'
     with open(output_csv, mode="w", newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow(["Metric", "Value"])
@@ -239,7 +240,7 @@ if __name__ == "__main__":
     
     # 保存活动统计结果
     if valid_samples > 0:
-        activity_stats_csv = f'{results_dir}/{method}_activity_stats_new.csv'
+        activity_stats_csv = f'{results_dir}/{method}_activity_stats.csv'
         with open(activity_stats_csv, mode="w", newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(["Activity", "Missing_Count", "Missing_Rate"])
