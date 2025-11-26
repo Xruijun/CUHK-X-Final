@@ -65,7 +65,7 @@ if __name__ == "__main__":
     output_dir = f"CUHK-X-VLM/src/task_caption/predictions/{modality}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    output_csv = output_dir + f'/pred_qwenvl{model_size}_new.csv'
+    output_csv = output_dir + f'/pred_qwenvl{model_size}.csv'
 
 
     # Check if output file exists and load processed results

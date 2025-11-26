@@ -107,7 +107,7 @@ def calculate_bleu(pred_list, gt_list):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--method', type=str, default='qwenvl7B', help='Model name')
-    parser.add_argument('--modality', type=str, default='rgb', help='depth, rgb, ir')
+    parser.add_argument('--modality', type=str, default='rgb', help='depth, rgb, ir, thermal')
 
     args = parser.parse_args()
 
@@ -116,13 +116,13 @@ if __name__ == "__main__":
    
     pred_path = f'CUHK-X-VLM/src/task_caption/predictions/{modality}/pred_{method}.csv'
     if modality == 'rgb':
-        gt_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_RGB_GT.csv'
+        gt_path = 'GT_folder/LM_RGB_GT.csv'
     if modality == 'ir':
-        gt_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_IR_GT.csv'
+        gt_path = 'GT_folder/LM_IR_GT.csv'
     if modality == 'depth':
-        gt_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_Depth_GT.csv'
+        gt_path = 'GT_folder/LM_Depth_GT.csv'
     if modality == 'thermal':
-        gt_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_Thermal_GT.csv'
+        gt_path = 'GT_folder/LM_Thermal_GT.csv'
     pred_dict = read_csv_to_dict(pred_path)
     gt_dict = read_xlsx_to_dict(gt_path)  # 使用新函数读取xlsx文件
 
@@ -209,10 +209,10 @@ if __name__ == "__main__":
     print(f"BLEU-4: {bleu_scores['bleu-4']:.4f}")
 
     # 确保输出目录存在
-    os.makedirs(f'src/task_caption/scores/{modality}', exist_ok=True)
+    os.makedirs(f'CUHK-X-VLM/src/task_caption/scores/{modality}', exist_ok=True)
     
     # save results to a new CSV file
-    output_csv = f'CUHK-X-VLM/src/task_caption/scores/{modality}/{method}_caption_METEOR.csv'
+    output_csv = f'CUHK-X-VLM/src/task_caption/scores/{modality}/{method}_caption.csv'
     with open(output_csv, mode="w", newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow(["Metric", "Value"])

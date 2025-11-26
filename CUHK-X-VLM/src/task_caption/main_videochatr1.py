@@ -4,7 +4,7 @@ from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from ..utils import videochatr1_inference
+from utils import videochatr1_inference
 import traceback
 import torch
 import gc
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     output_dir = f"CUHK-X-VLM/src/task_caption/predictions/{modality}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    output_csv = output_dir + f'/pred_videochatr1_new.csv'
+    output_csv = output_dir + f'/pred_videochatr1.csv'
 
     # Check if output file exists and load processed results
     processed_videos = []
