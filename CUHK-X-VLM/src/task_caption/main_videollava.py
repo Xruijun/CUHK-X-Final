@@ -4,7 +4,7 @@ from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import qwenvl_inference,videollava_inference
+from ..utils import qwenvl_inference,videollava_inference
 from transformers import VideoLlavaProcessor, VideoLlavaForConditionalGeneration
 import traceback
 import torch
@@ -41,23 +41,25 @@ if __name__ == "__main__":
 
     if modality == 'thermal':
         print("Using depth modality")
-        data_dir = "/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/LM_video/Thermal"
+        data_dir = "LM_video/Thermal"
     elif modality == 'rgb':
         print("Using RGB modality")
-        data_dir = "/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/LM_video/RGB"
+        data_dir = "LM_video/RGB"
     elif modality == 'ir':
         print("Using RGB modality")
-        data_dir = "/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/LM_video/IR"
+        data_dir = "LM_video/IR"
     elif modality == 'depth':
         print("Using RGB modality")
-        data_dir = "/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/LM_video/Depth"
+        data_dir = "LM_video/Depth"
     else:
         raise ValueError("Invalid modality. Choose from 'depth', 'rgb', or 'ir'.")
 
     file_list = os.listdir(data_dir)
-    # file_list = ['用户4-纪祥', '用户5-家敏', '用户2-雨棠', '用户1-丹妮', '用户3-志江']
 
-    output_csv = f'CUHK-X-VLM/src/task_caption/predictions/{modality}/pred_videollava_new.csv'
+    output_dir = "CUHK-X-VLM/src/task_caption/predictions"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    output_csv = output_dir + f'/{modality}/pred_videollava_new.csv'
 
     # Check if output file exists and load processed results
     processed_videos = []

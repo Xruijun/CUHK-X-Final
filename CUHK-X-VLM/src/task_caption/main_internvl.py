@@ -1,10 +1,12 @@
 import os
 import csv
+
+from numpy.distutils.lib2def import output_def
 from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import internvl_inference
+from ..utils import internvl_inference
 import torch
 import gc
 import argparse
@@ -46,24 +48,25 @@ if __name__ == "__main__":
 
     if modality == 'thermal':
         print("Using depth modality")
-        data_dir = "/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/LM_video/Thermal"
+        data_dir = "LM_video/Thermal"
     elif modality == 'rgb':
         print("Using RGB modality")
-        data_dir = "/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/LM_video/RGB"
+        data_dir = "LM_video/RGB"
     elif modality == 'ir':
         print("Using RGB modality")
-        data_dir = "/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/LM_video/IR"
+        data_dir = "LM_video/IR"
     elif modality == 'depth':
         print("Using RGB modality")
-        data_dir = "/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/LM_video/Depth"
+        data_dir = "LM_video/Depth"
     else:
         raise ValueError("Invalid modality. Choose from 'depth', 'rgb', or 'ir'.")
 
     file_list = os.listdir(data_dir)
-    # file_list = ['用户4-纪祥', '用户5-家敏', '用户2-雨棠', '用户1-丹妮', '用户3-志江']
 
-    # output_csv = 'results/predictions/pred_qwenvl.csv'
-    output_csv = f'CUHK-X-VLM/src/task_caption/predictions/{modality}/pred_internvl{model_size}_new.csv'
+    output_dir = "CUHK-X-VLM/src/task_caption/predictions"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    output_csv = output_dir +  f'/{modality}/pred_internvl{model_size}.csv'
 
 
     # Check if output file exists and load processed results
@@ -92,7 +95,7 @@ if __name__ == "__main__":
 
 
     # initialize vlm
-    model_path = f"OpenGVLab/InternVL3-{model_size}"
+    model_path = f"Models/InternVL3-{model_size}"
     model = AutoModel.from_pretrained(
         model_path,
         torch_dtype=torch.bfloat16,
@@ -181,7 +184,7 @@ if __name__ == "__main__":
                 writer.writerows(results)
             print(f"Results have been saved to {output_csv}")
             
-            # 检查是否已经处理了足够的样本
+            # check if there is enough samples
             if samples_processed >= process_num:
                 print(f"Reached target of {process_num} samples. Exiting.")
                 break

@@ -4,7 +4,7 @@ from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import videochatr1_inference
+from ..utils import videochatr1_inference
 import traceback
 import torch
 import gc
@@ -40,22 +40,26 @@ if __name__ == "__main__":
 
     if modality == 'thermal':
         print("Using thermal modality")
-        data_dir = "/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/LM_video/Thermal"
+        data_dir = "LM_video/Thermal"
     elif modality == 'rgb':
         print("Using RGB modality")
-        data_dir = "/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/LM_video/RGB"
+        data_dir = "LM_video/RGB"
     elif modality == 'ir':
         print("Using IR modality")
-        data_dir = "/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/LM_video/IR"
+        data_dir = "LM_video/IR"
     elif modality == 'depth':
         print("Using Depth modality")
-        data_dir = "/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/LM_video/Depth"
+        data_dir = "LM_video/Depth"
     else:
         raise ValueError("Invalid modality. Choose from 'depth', 'rgb', 'ir', or 'thermal'.")
 
     
     file_list = os.listdir(data_dir)
-    output_csv = f'CUHK-X-VLM/src/task_caption/predictions/{modality}/pred_videochatr1_new.csv'
+
+    output_dir = "CUHK-X-VLM/src/task_caption/predictions"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    output_csv = output_dir + f'/{modality}/pred_videochatr1_new.csv'
 
     # Check if output file exists and load processed results
     processed_videos = []
@@ -81,7 +85,7 @@ if __name__ == "__main__":
             exit(0)
 
     # Initialize VLM
-    model_path = "OpenGVLab/VideoChat-R1_7B"
+    model_path = "Models/VideoChat-R1_7B"
     model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
         model_path, torch_dtype="auto", device_map="auto"
     )
