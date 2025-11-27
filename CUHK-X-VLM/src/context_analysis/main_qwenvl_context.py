@@ -54,8 +54,11 @@ if __name__ == "__main__":
         
     test_data = read_csv_file(test_csv_path)
     print(f"Loaded {len(test_data)} samples from {test_csv_path}")
-    
-    output_csv = f'CUHK-X-VLM/src/context_analysis/predictions/{modality}/pred_qwenvl{model_size}.csv'
+
+    output_dir = f"CUHK-X-VLM/src/context_analysis/predictions/{modality}"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    output_csv = output_dir + f'/pred_qwenvl{model_size}.csv'
     
     # check if output file exists
     results = []

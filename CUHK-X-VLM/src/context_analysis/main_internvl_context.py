@@ -57,8 +57,11 @@ if __name__ == "__main__":
 
     test_data = read_csv_file(test_csv_path)
     print(f"Loaded {len(test_data)} samples from {test_csv_path}")
-    
-    output_csv = f'CUHK-X-VLM/src/context_analysis/predictions/{modality}/pred_internvl{model_size}.csv'
+
+    output_dir = f"CUHK-X-VLM/src/context_analysis/predictions/{modality}"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    output_csv = output_dir + f'/pred_internvl{model_size}.csv'
     
     # 检查是否已有输出文件并加载已处理的结果
     results = []
@@ -78,7 +81,7 @@ if __name__ == "__main__":
         print(f"已经处理了 {start_idx} 个样本，将从第 {start_idx+1} 个样本继续")
 
     # initialize vlm
-    model_path = f"Models/InternVL3-{model_size}"
+    model_path = f"Models/InternVL2-{model_size}"
     model = AutoModel.from_pretrained(
         model_path,
         torch_dtype=torch.bfloat16,
