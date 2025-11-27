@@ -16,14 +16,13 @@ def read_csv_file(csv_path):
     Read a CSV file and return the content as a list of rows.
     """
     data = []
-    base_path = "/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/"
     try:
         with open(csv_path, 'r', encoding='utf-8') as f:
             reader = csv.reader(f)
             header = next(reader)  # skip header
             for row in reader:
                 if len(row) >= 3:
-                    path = os.path.join(base_path, row[0])
+                    path = row[0]
                     caption = row[1]
                     gt = row[2]
                     data.append([path, caption, gt])
@@ -50,30 +49,29 @@ def shuffle_activities(activity_str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='qwenvl', help='Model name')
     parser.add_argument('--model_size', type=str, default='3B', help='Model size: 7B or 3B')
     parser.add_argument('--modality', type=str, default='rgb', help='depth, rgb, ir')
-    parser.add_argument('--task', type=str, default='2', help='1, 2')
     args = parser.parse_args()
 
-    model = args.model
     model_size = args.model_size
     modality = args.modality
-    task = args.task
 
     if modality == 'rgb':
-        test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_RGB_sequential.csv'
+        test_csv_path = 'GT_folder/LM_RGB_sequential.csv'
     elif modality == 'ir':
-        test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_IR_sequential.csv'
+        test_csv_path = 'GT_folder/LM_IR_sequential.csv'
     elif modality == 'depth':
-        test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_Depth_sequential.csv'
+        test_csv_path = 'GT_folder/LM_Depth_sequential.csv'
     elif modality == 'thermal':
-        test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_Thermal_sequential.csv'
+        test_csv_path = 'GT_folder/LM_Thermal_sequential.csv'
 
     test_data = read_csv_file(test_csv_path)
     print(f"Loaded {len(test_data)} samples from {test_csv_path}")
-    
-    output_csv = f'CUHK-X-VLM/src/task_caption2/predictions/{modality}/pred_qwenvl{model_size}.csv'
+
+    output_dir = f"CUHK-X-VLM/src/sequential_action_recording/predictions/{modality}"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    output_csv = output_dir + f'/pred_qwenvl{model_size}.csv'
     
     # Resume if output file already exists
     results = []
@@ -93,15 +91,14 @@ if __name__ == "__main__":
         print(f"已经处理了 {start_idx} 个样本，将从第 {start_idx+1} 个样本继续")
 
     # initialize model
-    model_path = f"Qwen/Qwen2.5-VL-{model_size}-Instruct"
+    model_path = f"Models/Qwen2.5-VL-{model_size}-Instruct"
     processor = AutoProcessor.from_pretrained(model_path)
     model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
         model_path, torch_dtype="auto", device_map="auto"
     )
 
-    if task == '2':
-        base_prompt = f"Question: Please sort the following activity lists in chronological order based on the video content. Output only the activities in this format: wiping hands, combing hair, getting dressed, squats, jumping jacks. Do not include any additional content. Activity lists are: "
 
+    base_prompt = f"Question: Please sort the following activity lists in chronological order based on the video content. Output only the activities in this format: wiping hands, combing hair, getting dressed, squats, jumping jacks. Do not include any additional content. Activity lists are: "
 
     idx = 1
     processed_count = 0
@@ -109,10 +106,6 @@ if __name__ == "__main__":
     for i, row in enumerate(test_data):
         if i < start_idx:
             continue
-    
-#        if processed_count >= 100:  # 添加100个样本的限制
-#            print("已处理100个样本，停止处理")
-#            break
 
         print(row)
         video_path = row[0]

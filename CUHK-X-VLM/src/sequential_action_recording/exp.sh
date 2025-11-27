@@ -1,20 +1,13 @@
-CUDA_VISIBLE_DEVICES=3,4,5,7 python src/task_caption1/main_videollava_choices.py --modality rgb
-CUDA_VISIBLE_DEVICES=3,4,5,7 python src/task_caption1/main_videollava_choices.py --modality ir
-CUDA_VISIBLE_DEVICES=3,4,5,7 python src/task_caption1/main_videollava_choices.py --modality thermal
-CUDA_VISIBLE_DEVICES=3,4,5,7 python src/task_caption1/main_videollava_choices.py --modality depth
+#CUDA_VISIBLE_DEVICES=0,1,2,3 python CUHK-X-VLM/src/sequential_action_recording/main_internvl_shuffle.py --modality depth --model_size 2B
+#CUDA_VISIBLE_DEVICES=0,1,2,3 python CUHK-X-VLM/src/sequential_action_recording/main_internvl_shuffle.py --modality depth --model_size 8B
+#CUDA_VISIBLE_DEVICES=0,1,2,3 python CUHK-X-VLM/src/sequential_action_recording/main_qwenvl_shuffle.py --modality depth --model_size 3B
+#CUDA_VISIBLE_DEVICES=0,1,2,3 python CUHK-X-VLM/src/sequential_action_recording/main_qwenvl_shuffle.py --modality depth --model_size 7B
+#CUDA_VISIBLE_DEVICES=0,1,2,3 python CUHK-X-VLM/src/sequential_action_recording/main_videochatr1_shuffle.py --modality depth
+#CUDA_VISIBLE_DEVICES=0,1,2,3 python CUHK-X-VLM/src/sequential_action_recording/main_videollava_shuffle.py --modality depth
 
-CUDA_VISIBLE_DEVICES=3,4,5,7 python src/task_caption2/main_videollava_choices.py --modality rgb
-CUDA_VISIBLE_DEVICES=3,4,5,7 python src/task_caption2/main_videollava_choices.py --modality ir
-CUDA_VISIBLE_DEVICES=3,4,5,7 python src/task_caption2/main_videollava_choices.py --modality thermal
-CUDA_VISIBLE_DEVICES=3,4,5,7 python src/task_caption2/main_videollava_choices.py --modality depth
-
-
-
-
-
-CUDA_VISIBLE_DEVICES=0,1,3,6,7 python src/task_caption2/main_internvl_choices.py --modality rgb --model_size 2B
-CUDA_VISIBLE_DEVICES=0,1,3,6,7 python src/task_caption2/main_internvl_choices.py --modality rgb --model_size 8B
-CUDA_VISIBLE_DEVICES=0,1,3,6,7 python src/task_caption2/main_qwenvl_choices.py --modality rgb --model_size 3B
-CUDA_VISIBLE_DEVICES=0,1,3,6,7 python src/task_caption2/main_qwenvl_choices.py --modality rgb --model_size 7B
-CUDA_VISIBLE_DEVICES=0,1,3,6,7 python src/task_caption2/main_videochatr1_choices.py
-
+#CUDA_VISIBLE_DEVICES=0,1,2,3 python CUHK-X-VLM/src/sequential_action_recording/main_internvl_shuffle.py --modality rgb --model_size 2B
+#CUDA_VISIBLE_DEVICES=0,1,2,3 python CUHK-X-VLM/src/sequential_action_recording/main_internvl_shuffle.py --modality rgb --model_size 8B
+#CUDA_VISIBLE_DEVICES=0,1,2,3 python CUHK-X-VLM/src/sequential_action_recording/main_qwenvl_shuffle.py --modality rgb --model_size 3B
+#CUDA_VISIBLE_DEVICES=0,1,2,3 python CUHK-X-VLM/src/sequential_action_recording/main_qwenvl_shuffle.py --modality rgb --model_size 7B
+#CUDA_VISIBLE_DEVICES=0,1,2,3 python CUHK-X-VLM/src/sequential_action_recording/main_videochatr1_shuffle.py --modality rgb
+#CUDA_VISIBLE_DEVICES=0,1,2,3 python CUHK-X-VLM/src/sequential_action_recording/main_videollava_shuffle.py --modality rgb

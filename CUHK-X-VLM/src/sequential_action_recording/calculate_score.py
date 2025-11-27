@@ -160,7 +160,7 @@ if __name__ == "__main__":
     modality = args.modality  # 'depth', 'rgb', 'ir' 
    
     # 读取预测结果CSV文件
-    pred_path = f'CUHK-X-VLM/src/task_caption2/predictions/{modality}/pred_{method}.csv'
+    pred_path = f'CUHK-X-VLM/src/sequential_action_recording/predictions/{modality}/pred_{method}.csv'
     data = read_csv_with_activities(pred_path)
     print(f"Loaded {len(data)} samples from {pred_path}")
 
@@ -226,9 +226,8 @@ if __name__ == "__main__":
         print("没有有效样本进行评估")
     
     # 保存评估结果
-    results_dir = f'CUHK-X-VLM/src/task_caption2/scores/{modality}'
+    results_dir = f'CUHK-X-VLM/src/sequential_action_recording/scores/{modality}'
     os.makedirs(results_dir, exist_ok=True)
-    
     output_csv = f'{results_dir}/{method}_order_scores.csv'
     with open(output_csv, mode="w", newline='', encoding='utf-8') as f:
         writer = csv.writer(f)

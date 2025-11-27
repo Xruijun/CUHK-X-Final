@@ -16,7 +16,6 @@ def read_csv_file(csv_path):
     Read a CSV file and return the content as a list of rows.
     """
     data = []
-    base_path = "/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/"
     try:
         # 读取CSV文件
         with open(csv_path, 'r', encoding='utf-8') as f:
@@ -25,7 +24,7 @@ def read_csv_file(csv_path):
             for row in reader:
                 if len(row) >= 3:  # 确保至少有3列
                     # 确保路径前添加基础路径
-                    path = os.path.join(base_path, row[0])
+                    path = row[0]
                     caption = row[1]
                     gt = row[2]
                     data.append([path, caption, gt])
@@ -74,31 +73,28 @@ if __name__ == "__main__":
     parser.add_argument('--model', type=str, default='internvl', help='Model name')
     parser.add_argument('--model_size', type=str, default='2B', help='Model size: 7B or 3B')
     parser.add_argument('--modality', type=str, default='rgb', help='depth, rgb, ir')
-    parser.add_argument('--task', type=str, default='2', help='1, 2')
     args = parser.parse_args()
 
     model = args.model
     model_size = args.model_size  # or '8B', '2B'
     modality = args.modality  # 'depth', 'rgb', 'ir'
-    task = args.task  # '1', '2'
 
-    # if modality == 'rgb':
-    #     test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/video_data/video_GT_candidates/Color_GT_Candidates.csv'
-    # if modality == 'ir':
-    #     test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/video_data/video_GT_candidates/IR_GT_Candidates.csv'
     if modality == 'rgb':
-        test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_RGB_sequential.csv'
+        test_csv_path = 'GT_folder/LM_RGB_sequential.csv'
     elif modality == 'ir':
-        test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_IR_sequential.csv'
+        test_csv_path = 'GT_folder/LM_IR_sequential.csv'
     elif modality == 'depth':
-        test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_Depth_sequential.csv'
+        test_csv_path = 'GT_folder/LM_Depth_sequential.csv'
     elif modality == 'thermal':
-        test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_Thermal_sequential.csv'
+        test_csv_path = 'GT_folder/LM_Thermal_sequential.csv'
 
     test_data = read_csv_file(test_csv_path)
     print(f"Loaded {len(test_data)} samples from {test_csv_path}")
-    
-    output_csv = f'CUHK-X-VLM/src/task_caption2/predictions/{modality}/pred_internvl{model_size}.csv'
+
+    output_dir = f"CUHK-X-VLM/src/sequential_action_recording/predictions/{modality}"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    output_csv = output_dir + f'/pred_internvl{model_size}.csv'
     
     # 检查是否已有输出文件并加载已处理的结果
     results = []
@@ -118,7 +114,7 @@ if __name__ == "__main__":
         print(f"已经处理了 {start_idx} 个样本，将从第 {start_idx+1} 个样本继续")
 
     # initialize VLM
-    model_path = f"OpenGVLab/InternVL3-{model_size}"
+    model_path = f"Models/InternVL2-{model_size}"
     model = AutoModel.from_pretrained(
         model_path,
         torch_dtype=torch.bfloat16,
@@ -126,9 +122,8 @@ if __name__ == "__main__":
         trust_remote_code=True
     ).eval().cuda()
     tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, use_fast=False)
-    
-    if task == '2':
-        base_prompt = f"Question: Please sort the following activity lists in chronological order based on the video content. Output only the activities in this format: wiping hands, combing hair, getting dressed, squats, jumping jacks. Do not include any additional content. Activity lists are: "
+
+    base_prompt = f"Question: Please sort the following activity lists in chronological order based on the video content. Output only the activities in this format: wiping hands, combing hair, getting dressed, squats, jumping jacks. Do not include any additional content. Activity lists are: "
 
     idx = 1
     processed_count = 0 
@@ -136,10 +131,6 @@ if __name__ == "__main__":
     for i, row in enumerate(test_data):
         if i < start_idx:
             continue
-
-#        if processed_count >= 100:  # 添加100个样本的限制
-#            print("已处理100个样本，停止处理")
-#            break    
 
         video_path = row[0]
         gt = row[2]
@@ -184,7 +175,6 @@ if __name__ == "__main__":
             writer.writerow(["Path", "Logic", "vlm_result"])
             writer.writerows(results)
         print(f"Results have been saved to {output_csv}")
-        # raise ValueError
 
 
 

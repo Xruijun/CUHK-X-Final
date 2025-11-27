@@ -80,7 +80,7 @@ if __name__ == "__main__":
     print(f"Accuracy: {accuracy:.4f} ({correct}/{total}, {accuracy*100:.2f}%)")
 
     # Create directory if it doesn't exist
-    os.makedirs(f"src/context_analysis/scores/{modality}", exist_ok=True)
+    os.makedirs(f"CUHK-X-VLM/src/context_analysis/scores/{modality}", exist_ok=True)
     
     # Save accuracy to CSV file
     output_csv = f"CUHK-X-VLM/src/context_analysis/scores/{modality}/{method}_accuracy.csv"
