@@ -3,10 +3,9 @@ import csv
 import pandas as pd
 from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
-from transformers import VideoLlavaProcessor, VideoLlavaForConditionalGeneration
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import videollava_inference
+from utils import qwenvl_inference
 import torch
 import argparse
 import traceback
@@ -16,7 +15,6 @@ def read_csv_file(csv_path):
     Read a CSV file and return the content as a list of rows.
     """
     data = []
-    base_path = "/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/"
     try:
         # 读取CSV文件
         with open(csv_path, 'r', encoding='utf-8') as f:
@@ -25,7 +23,7 @@ def read_csv_file(csv_path):
             for row in reader:
                 if len(row) >= 3:  # 确保至少有3列
                     # 确保路径前添加基础路径
-                    path = os.path.join(base_path, row[0])
+                    path = row[0]
                     logic = row[1]
                     candidate = row[2]
                     data.append([path, logic, candidate])
@@ -38,11 +36,14 @@ def read_csv_file(csv_path):
         
     return data
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument('--model_size', type=str, default='7B', help='Model size: 7B or 3B')
     parser.add_argument('--modality', type=str, default='rgb', help='depth, rgb, ir')
-
     args = parser.parse_args()
+
+    model_size = args.model_size  # or '7B', '3B'
     modality = args.modality  # 'depth', 'rgb', 'ir'
 
     if modality == 'rgb':
@@ -56,9 +57,12 @@ if __name__ == "__main__":
 
     test_data = read_csv_file(test_csv_path)
     print(f"Loaded {len(test_data)} samples from {test_csv_path}")
-    
-    output_csv = f'CUHK-X-VLM/src/task_logic/predictions/{modality}/pred_videollava_new.csv'
-    
+
+    output_dir = f'CUHK-X-VLM/src/task_logic/predictions/{modality}'
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    output_csv = output_dir + f'/pred_qwenvl{model_size}.csv'
+
     # 检查是否已有输出文件并加载已处理的结果
     results = []
     processed_paths = []
@@ -69,7 +73,7 @@ if __name__ == "__main__":
             reader = csv.reader(f)
             header = next(reader)  # 跳过表头
             for row in reader:
-                if len(row) >= 5:  # 确保行有足够的元素
+                if len(row) >= 3:  # 确保行有足够的元素
                     path = row[0]
                     processed_paths.append(path)
                     results.append(row)
@@ -77,14 +81,11 @@ if __name__ == "__main__":
         start_idx = len(processed_paths)
         print(f"已经处理了 {start_idx} 个样本，将从第 {start_idx+1} 个样本继续")
 
-
-
-
     # initialize vlm
-    model = VideoLlavaForConditionalGeneration.from_pretrained("LanguageBind/Video-LLaVA-7B-hf")
-    processor = VideoLlavaProcessor.from_pretrained("LanguageBind/Video-LLaVA-7B-hf")
+    model_path = f"Models/Qwen2.5-VL-{model_size}-Instruct"
+    processor = AutoProcessor.from_pretrained(model_path)
+    model = Qwen2_5_VLForConditionalGeneration.from_pretrained(model_path, torch_dtype="auto", device_map="auto")
 
-    # prompt = "Question: What activity is the person likely to do next? Options: "
     prompt = "Question: What activity is the person likely to do next? Options: "
     # results, idx = [], 1
     idx = 1
@@ -92,26 +93,26 @@ if __name__ == "__main__":
         if i < start_idx:  # 跳过已处理的样本
             continue
         print(row)
-
+        
         if idx >= 3000:  # 添加100个样本的限制
             print("已处理100个样本，停止处理")
             break 
-                
+
         video_path = row[0]
         logic = row[1]
         candidate = row[2]
-
+        
         # 处理 candidate 可能为空或只有一个选项的情况
+        # CSV文件中应该不会有NaN问题，但仍处理空字符串情况
         candidate_options = candidate.split(',') if candidate else []
         option_a = candidate_options[0].strip() if len(candidate_options) > 0 else ""
         option_b = candidate_options[1].strip() if len(candidate_options) > 1 else ""
 
-
         print(f"Row {i+1}:")
         print(f"  Path: {video_path}")
         print(f"  Logic: {logic}")
-        print(f"  Opions: {option_a}")
-        print(f"  Opions: {option_b}")
+        print(f"  Option A: {option_a}")
+        print(f"  Option B: {option_b}")
         print("-" * 50)
     
         # 根据是否有选项 B 来构建查询
@@ -126,8 +127,7 @@ if __name__ == "__main__":
         print(f"  Query: {query}")
 
         try:
-            query0 = "USER: <video>"+ query + " ASSISTANT:"
-            res = videollava_inference(video_path, query0, model, processor)
+            res = qwenvl_inference(video_path, query, model, processor)
             print(video_path)
             print(res)
         except torch.cuda.OutOfMemoryError:
@@ -159,9 +159,3 @@ if __name__ == "__main__":
             writer.writerow(["Path", "Logic", "vlm_result"])
             writer.writerows(results)
         print(f"Results have been saved to {output_csv}")
-        # raise ValueError
-
-
-
-
-    

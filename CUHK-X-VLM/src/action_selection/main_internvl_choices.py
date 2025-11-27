@@ -50,12 +50,10 @@ def read_class_names(file_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='internvl', help='Model name')
     parser.add_argument('--model_size', type=str, default='8B', help='Model size: 8B or 3B')
     parser.add_argument('--modality', type=str, default='rgb', help='depth, rgb, ir, thermal')
     args = parser.parse_args()
 
-    model = args.model
     model_size = args.model_size
     modality = args.modality
 
@@ -75,7 +73,7 @@ if __name__ == "__main__":
     test_data = read_csv_file(test_csv_path)
     print(f"Loaded {len(test_data)} samples from {test_csv_path}")
 
-    output_dir = f"CUHK-X-VLM/src/task_caption1/predictions/{modality}"
+    output_dir = f"CUHK-X-VLM/src/action_selection/predictions/{modality}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     output_csv = output_dir + f'/pred_internvl{model_size}.csv'
@@ -96,7 +94,7 @@ if __name__ == "__main__":
         start_idx = len(processed_paths)
         print(f"已经处理了 {start_idx} 个样本，将从第 {start_idx+1} 个样本继续")
 
-    model_path = f"Models/InternVL3-{model_size}"
+    model_path = f"Models/InternVL2-{model_size}"
     model = AutoModel.from_pretrained(
         model_path,
         torch_dtype=torch.bfloat16,
@@ -152,4 +150,3 @@ if __name__ == "__main__":
             writer.writerow(["Path", "Logic", "vlm_result"])
             writer.writerows(results)
         print(f"Results have been saved to {output_csv}")
-        # raise ValueError

@@ -63,7 +63,6 @@ def calculate_accuracy(csv_path, method):
     return accuracy, correct_samples, total_samples
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--method', type=str, default='videochatr1', help='Model name')
     parser.add_argument('--modality', type=str, default='ir', help='depth, rgb, ir')

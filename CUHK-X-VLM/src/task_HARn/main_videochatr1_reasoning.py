@@ -3,10 +3,10 @@ import csv
 import pandas as pd
 from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
-from transformers import AutoModel, AutoTokenizer
+from transformers import VideoLlavaProcessor, VideoLlavaForConditionalGeneration
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import internvl_inference
+from utils import videochatr1_inference
 import torch
 import argparse
 import traceback
@@ -16,7 +16,6 @@ def read_csv_file(csv_path):
     Read a CSV file and return the content as a list of rows.
     """
     data = []
-    base_path = "/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/"
     try:
         # 读取CSV文件
         with open(csv_path, 'r', encoding='utf-8') as f:
@@ -25,7 +24,7 @@ def read_csv_file(csv_path):
             for row in reader:
                 if len(row) >= 3:  # 确保至少有3列
                     # 确保路径前添加基础路径
-                    path = os.path.join(base_path, row[0])
+                    path = row[0]
                     logic = row[1]
                     candidate = row[2]
                     data.append([path, logic, candidate])
@@ -40,13 +39,9 @@ def read_csv_file(csv_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='internvl', help='Model name')
-    parser.add_argument('--model_size', type=str, default='8B', help='Model size: 7B or 3B')
     parser.add_argument('--modality', type=str, default='rgb', help='depth, rgb, ir')
-    args = parser.parse_args()
 
-    model = args.model
-    model_size = args.model_size  # or '8B', '2B'
+    args = parser.parse_args()
     modality = args.modality  # 'depth', 'rgb', 'ir'
 
     if modality == 'rgb':
@@ -58,11 +53,13 @@ if __name__ == "__main__":
     if modality == 'thermal':
         test_csv_path = ''
 
-
     test_data = read_csv_file(test_csv_path)
     print(f"Loaded {len(test_data)} samples from {test_csv_path}")
-    
-    output_csv = f'CUHK-X-VLM/src/task_logic/predictions/{modality}/pred_internvl{model_size}_new.csv'
+
+    output_dir = f'CUHK-X-VLM/src/task_logic/predictions/{modality}'
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    output_csv = output_dir + f'/pred_videochatr1.csv'
     
     # 检查是否已有输出文件并加载已处理的结果
     results = []
@@ -82,18 +79,13 @@ if __name__ == "__main__":
         start_idx = len(processed_paths)
         print(f"已经处理了 {start_idx} 个样本，将从第 {start_idx+1} 个样本继续")
 
-
-
-
     # initialize vlm
-    model_path = f"OpenGVLab/InternVL3-{model_size}"
-    model = AutoModel.from_pretrained(
-        model_path,
-        torch_dtype=torch.bfloat16,
-        low_cpu_mem_usage=True,
-        trust_remote_code=True).eval().cuda()
-    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, use_fast=False)
-    
+    model_path = "Models/VideoChat-R1_7B"
+    model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+        model_path, torch_dtype="auto", device_map="auto"
+    )
+    processor = AutoProcessor.from_pretrained(model_path)
+
     prompt = "Question: What activity is the person likely to do next? Options: "
     # results, idx = [], 1
     idx = 1
@@ -105,7 +97,7 @@ if __name__ == "__main__":
         if idx >= 3000:  # 添加100个样本的限制
             print("已处理100个样本，停止处理")
             break 
-              
+                
         video_path = row[0]
         logic = row[1]
         candidate = row[2]
@@ -135,7 +127,7 @@ if __name__ == "__main__":
         print(f"  Query: {query}")
 
         try:
-            res = internvl_inference(video_path, query, model, tokenizer)
+            res = videochatr1_inference(video_path, query, model, processor)
             print(video_path)
             print(res)
         except torch.cuda.OutOfMemoryError:
@@ -167,9 +159,3 @@ if __name__ == "__main__":
             writer.writerow(["Path", "Logic", "vlm_result"])
             writer.writerows(results)
         print(f"Results have been saved to {output_csv}")
-        # raise ValueError
-
-
-
-
-    

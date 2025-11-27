@@ -118,7 +118,7 @@ if __name__ == "__main__":
     modality = args.modality  # 'depth', 'rgb', 'ir' 
    
     # 读取预测结果CSV文件
-    pred_path = f'CUHK-X-VLM/src/task_caption1/predictions/{modality}/pred_{method}.csv'
+    pred_path = f'CUHK-X-VLM/src/action_selection/predictions/{modality}/pred_{method}.csv'
     data = read_csv_with_activities(pred_path)
     print(f"Loaded {len(data)} samples from {pred_path}")
     print(f"使用模型: {method}")
@@ -223,7 +223,7 @@ if __name__ == "__main__":
         sorted_missing = []
     
     # 保存评估结果
-    results_dir = f'CUHK-X-VLM/src/task_caption1/scores/{modality}'
+    results_dir = f'CUHK-X-VLM/src/action_selection/scores/{modality}'
     if not os.path.exists(results_dir):
         os.makedirs(results_dir, exist_ok=True)
     

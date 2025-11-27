@@ -5,9 +5,7 @@ from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
 from transformers import VideoLlavaProcessor, VideoLlavaForConditionalGeneration
 import sys
-
 from Data_Organization.SM_data_video import output_csv
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import videochatr1_inference
 import torch
@@ -81,7 +79,7 @@ if __name__ == "__main__":
     test_data = read_csv_file(test_csv_path)
     print(f"Loaded {len(test_data)} samples from {test_csv_path}")
 
-    output_dir = f"CUHK-X-VLM/src/task_caption1/predictions/{modality}"
+    output_dir = f"CUHK-X-VLM/src/action_selection/predictions/{modality}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     output_csv = output_dir + '/pred_videochatr1_new.csv'

@@ -79,7 +79,7 @@ if __name__ == "__main__":
     test_data = read_csv_file(test_csv_path)
     print(f"Loaded {len(test_data)} samples from {test_csv_path}")
 
-    output_dir = f"CUHK-X-VLM/src/task_caption1/predictions/{modality}"
+    output_dir = f"CUHK-X-VLM/src/action_selection/predictions/{modality}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     output_csv = output_dir + '/pred_videollava.csv'
@@ -104,8 +104,9 @@ if __name__ == "__main__":
 
 
     # initialize vlm
-    model = VideoLlavaForConditionalGeneration.from_pretrained("Models/Video-LLaVA-7B-hf")
-    processor = VideoLlavaProcessor.from_pretrained("Models/Video-LLaVA-7B-hf")
+    model_path = "Models/Video-LLaVA-7B-hf"
+    model = VideoLlavaForConditionalGeneration.from_pretrained(model_path)
+    processor = VideoLlavaProcessor.from_pretrained(model_path)
 
     prompt = f"Question: What activity is the person performing in the video? You must choose only from the following activities: {class_names_str}. You can choose multiple activities if necessary. \nPlease answer with the activity name or names, separated by commas such as standing up, walking, mopping, walking, etc."
 

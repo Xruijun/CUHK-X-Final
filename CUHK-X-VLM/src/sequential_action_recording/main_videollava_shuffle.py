@@ -102,7 +102,6 @@ if __name__ == "__main__":
     )
 
     idx = 1
-    processed_count = 0
 
     for i, row in enumerate(test_data):
         if i < start_idx:
@@ -145,19 +144,10 @@ if __name__ == "__main__":
 
         results.append([video_path, gt, res])
         idx += 1
-        processed_count += 1
 
-        # save every 100 samples
-        if processed_count % 100 == 0:
-            with open(output_csv, mode="w", newline='') as f:
-                writer = csv.writer(f)
-                writer.writerow(["Path", "Logic", "vlm_result"])
-                writer.writerows(results)
-            print(f"已保存 {len(results)} 个结果到 {output_csv}")
+        with open(output_csv, mode="w", newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(["Path", "Logic", "vlm_result"])
+            writer.writerows(results)
+        print(f"已保存 {len(results)} 个结果到 {output_csv}")
 
-    # final save
-    with open(output_csv, mode="w", newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(["Path", "Logic", "vlm_result"])
-        writer.writerows(results)
-    print(f"最终保存所有结果到 {output_csv}")

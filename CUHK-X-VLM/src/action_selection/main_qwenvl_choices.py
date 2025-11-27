@@ -56,12 +56,10 @@ def read_class_names(file_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='qwenvl', help='Model name')
     parser.add_argument('--model_size', type=str, default='7B', help='Model size: 7B or 3B')
     parser.add_argument('--modality', type=str, default='rgb', help='depth, rgb, ir, thermal')
     args = parser.parse_args()
 
-    model = args.model
     model_size = args.model_size  # or '7B', '3B'
     modality = args.modality  # 'depth', 'rgb', 'ir'
 
@@ -82,7 +80,7 @@ if __name__ == "__main__":
     test_data = read_csv_file(test_csv_path)
     print(f"Loaded {len(test_data)} samples from {test_csv_path}")
 
-    output_dir = f"CUHK-X-VLM/src/task_caption1/predictions/{modality}"
+    output_dir = f"CUHK-X-VLM/src/action_selection/predictions/{modality}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     output_csv = output_dir + f'/pred_qwenvl{model_size}.csv'
