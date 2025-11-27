@@ -11,20 +11,6 @@ from transformers import AutoModel, AutoTokenizer
 import torch
 
 
-def videollava_inference(video_path, prompt, model, processor):
-    container = av.open(video_path)
-    total_frames = container.streams.video[0].frames
-    indices = np.arange(0, total_frames, total_frames / 8).astype(int)
-    clip = read_video_pyav(container, indices)
-    inputs = processor(text=prompt, videos=clip, return_tensors="pt")
-    # Generate
-    generate_ids = model.generate(**inputs)
-    output = processor.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
-
-    response = extract_assistant_response(output)
-    return response
-
-
 def extract_assistant_response(output):
     """
     Extract the part of the response after 'ASSISTANT:'
@@ -47,6 +33,20 @@ def read_video_pyav(container, indices):
         if i >= start_index and i in indices:
             frames.append(frame)
     return np.stack([x.to_ndarray(format="rgb24") for x in frames])
+
+
+def videollava_inference(video_path, prompt, model, processor):
+    container = av.open(video_path)
+    total_frames = container.streams.video[0].frames
+    indices = np.arange(0, total_frames, total_frames / 8).astype(int)
+    clip = read_video_pyav(container, indices)
+    inputs = processor(text=prompt, videos=clip, return_tensors="pt")
+    # Generate
+    generate_ids = model.generate(**inputs)
+    output = processor.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
+
+    response = extract_assistant_response(output)
+    return response
 
 
 def qwenvl_inference(video_path, prompt, model, processor):
@@ -84,6 +84,54 @@ def internvl_inference(video_path, prompt, model, tokenizer):
                                    num_patches_list=num_patches_list, history=None, return_history=True)
     # print(f'User: {question}\nAssistant: {response}')
     return response
+
+
+def videochatr1_inference(video_path, prompt, model, processor):
+    """
+    VideoChatR1 inference
+    """
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "video",
+                    "video": video_path,
+                    "max_pixels": 360 * 420,
+                    "nframes": 32
+                },
+                {"type": "text", "text": f"""{prompt}
+            Provide your final answer within the <answer> </answer> tags.
+             """},
+            ],
+        }
+    ]
+
+    text = processor.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=True
+    )
+    image_inputs, video_inputs, video_kwargs = process_vision_info(messages, return_video_kwargs=True)
+    inputs = processor(
+        text=[text],
+        images=image_inputs,
+        videos=video_inputs,
+        padding=True,
+        return_tensors="pt",
+        **video_kwargs,
+    )
+    inputs = inputs.to("cuda")
+
+    # Inference
+    generated_ids = model.generate(**inputs, max_new_tokens=512)
+    generated_ids_trimmed = [
+        out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+    ]
+    output_text = processor.batch_decode(
+        generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
+    )
+    output_text = output_text[0]
+    return output_text
+
 
 
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
@@ -189,101 +237,6 @@ def load_video(video_path, bound=None, input_size=448, max_num=1, num_segments=3
     pixel_values = torch.cat(pixel_values_list)
     return pixel_values, num_patches_list
 
-
-def videochatr1_inference(video_path, prompt, model, processor):
-    """
-    VideoChatR1 inference
-    """
-    messages = [
-        {
-            "role": "user",
-            "content": [
-                {
-                    "type": "video",
-                    "video": video_path,
-                    "max_pixels": 360 * 420,
-                    "nframes": 32
-                },
-                {"type": "text", "text": f"""{prompt}
-            Provide your final answer within the <answer> </answer> tags.
-             """},
-            ],
-        }
-    ]
-
-    text = processor.apply_chat_template(
-        messages, tokenize=False, add_generation_prompt=True
-    )
-    image_inputs, video_inputs, video_kwargs = process_vision_info(messages, return_video_kwargs=True)
-    inputs = processor(
-        text=[text],
-        images=image_inputs,
-        videos=video_inputs,
-        padding=True,
-        return_tensors="pt",
-        **video_kwargs,
-    )
-    inputs = inputs.to("cuda")
-
-    # Inference
-    generated_ids = model.generate(**inputs, max_new_tokens=512)
-    generated_ids_trimmed = [
-        out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-    ]
-    output_text = processor.batch_decode(
-        generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-    )
-    output_text = output_text[0]
-    return output_text
-
-
-def videochatr1_inference(video_path, prompt, model, processor):
-    """
-    VideoChatR1 inference
-    """
-    messages = [
-        {
-            "role": "user",
-            "content": [
-                {
-                    "type": "video",
-                    "video": video_path,
-                    "max_pixels": 460800,
-                    "nframes": 32
-                },
-                {"type": "text", "text": f"""{prompt}
-            Provide your final answer within the <answer> </answer> tags.
-             """},
-            ],
-        }
-    ]
-
-    text = processor.apply_chat_template(
-        messages, tokenize=False, add_generation_prompt=True
-    )
-    image_inputs, video_inputs, video_kwargs = process_vision_info(messages, return_video_kwargs=True)
-    inputs = processor(
-        text=[text],
-        images=image_inputs,
-        videos=video_inputs,
-        padding=True,
-        return_tensors="pt",
-        **video_kwargs,
-    )
-    inputs = inputs.to("cuda")
-
-    # Inference
-    generated_ids = model.generate(**inputs, max_new_tokens=512)
-    generated_ids_trimmed = [
-        out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-    ]
-    output_text = processor.batch_decode(
-        generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-    )
-    output_text = output_text[0]
-    return output_text
-
-
 # Prompt template
 QUESTION_TEMPLATE = (
     "{Question}\n"
@@ -300,47 +253,4 @@ TYPE_TEMPLATE = {
     "free-form": " Please provide your text answer within the <answer> </answer> tags.",
     "regression": " Please provide the numerical value (e.g., 42 or 3.14) within the <answer> </answer> tags."
 }
-
-
-def videor1_inference(video_path, prompt, problem_type, processor, llm, sampling_params):
-    """
-    Video-R1 inference
-    """
-    messages = [
-        {
-            "role": "user",
-            "content": [
-                {
-                    "type": "video",
-                    "video": video_path,
-                    "max_pixels": 200704,  # max pixels for each frame
-                    "nframes": 32  # max frame number
-                },
-                {
-                    "type": "text",
-                    "text": QUESTION_TEMPLATE.format(Question=prompt) + TYPE_TEMPLATE[problem_type]
-                },
-            ],
-        }
-    ]
-    # Convert to prompt string
-    prompt = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-
-    # Process video input
-    image_inputs, video_inputs, video_kwargs = process_vision_info(messages, return_video_kwargs=True)
-
-    # Prepare vllm input
-    llm_inputs = [{
-        "prompt": prompt,
-        "multi_modal_data": {"video": video_inputs[0]},
-        "mm_processor_kwargs": {key: val[0] for key, val in video_kwargs.items()},
-    }]
-
-    # Run inference
-    outputs = llm.generate(llm_inputs, sampling_params=sampling_params)
-    output_text = outputs[0].outputs[0].text
-
-    print(output_text)
-
-    return output_text
 

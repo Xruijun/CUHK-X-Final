@@ -46,16 +46,16 @@ if __name__ == "__main__":
 
 
     if modality == 'thermal':
-        print("Using depth modality")
+        print("Using thermal modality")
         data_dir = "LM_video/Thermal"
     elif modality == 'rgb':
         print("Using RGB modality")
         data_dir = "LM_video/RGB"
     elif modality == 'ir':
-        print("Using RGB modality")
+        print("Using IR modality")
         data_dir = "LM_video/IR"
     elif modality == 'depth':
-        print("Using RGB modality")
+        print("Using Depth modality")
         data_dir = "LM_video/Depth"
     else:
         raise ValueError("Invalid modality. Choose from 'depth', 'rgb', or 'ir'.")

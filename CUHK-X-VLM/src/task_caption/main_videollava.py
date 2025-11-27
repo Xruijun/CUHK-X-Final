@@ -40,16 +40,16 @@ if __name__ == "__main__":
     process_num = 2000  # 处理的样本数量限制
 
     if modality == 'thermal':
-        print("Using depth modality")
+        print("Using thermal modality")
         data_dir = "LM_video/Thermal"
     elif modality == 'rgb':
         print("Using RGB modality")
         data_dir = "LM_video/RGB"
     elif modality == 'ir':
-        print("Using RGB modality")
+        print("Using IR modality")
         data_dir = "LM_video/IR"
     elif modality == 'depth':
-        print("Using RGB modality")
+        print("Using Depth modality")
         data_dir = "LM_video/Depth"
     else:
         raise ValueError("Invalid modality. Choose from 'depth', 'rgb', or 'ir'.")
@@ -86,8 +86,9 @@ if __name__ == "__main__":
             exit(0)
 
     # initialize vlm
-    model = VideoLlavaForConditionalGeneration.from_pretrained("Models/Video-LLaVA-7B")
-    processor = VideoLlavaProcessor.from_pretrained("Models/Video-LLaVA-7B")
+    model_path = 'Models/Video-LLaVA-7B-hf'
+    model = VideoLlavaForConditionalGeneration.from_pretrained(model_path)
+    processor = VideoLlavaProcessor.from_pretrained(model_path)
 
     # prompt = "Describe the video content."
     prompt = "Describe what the person in the video is doing. You can briefly mention the background or setting, but focus mainly on understanding the person's actions."
