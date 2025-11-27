@@ -86,8 +86,8 @@ if __name__ == "__main__":
             exit(0)
 
     # initialize vlm
-    model = VideoLlavaForConditionalGeneration.from_pretrained("LanguageBind/Video-LLaVA-7B-hf")
-    processor = VideoLlavaProcessor.from_pretrained("LanguageBind/Video-LLaVA-7B-hf")
+    model = VideoLlavaForConditionalGeneration.from_pretrained("Models/Video-LLaVA-7B")
+    processor = VideoLlavaProcessor.from_pretrained("Models/Video-LLaVA-7B")
 
     # prompt = "Describe the video content."
     prompt = "Describe what the person in the video is doing. You can briefly mention the background or setting, but focus mainly on understanding the person's actions."

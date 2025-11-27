@@ -152,21 +152,13 @@ if __name__ == "__main__":
             samples_processed += 1
             idx += 1
 
-            # ✅ Save results every 100 samples or at the end
-            if samples_processed % 100 == 0 or samples_processed >= process_num:
-                with open(output_csv, mode="w", newline='') as f:
-                    writer = csv.writer(f)
-                    writer.writerow(["video_path", "vlm_result"])
-                    writer.writerows(results)
-                print(f"✅ Saved {samples_processed} samples to {output_csv}")
+            # save results
+            with open(output_csv, mode="w", newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(["video_path", "vlm_result"])
+                writer.writerows(results)
+            print(f"Results have been saved to {output_csv}")
 
             if samples_processed >= process_num:
                 print(f"Reached target of {process_num} samples. Exiting.")
                 break
-    
-    # Final save to ensure nothing is lost
-    with open(output_csv, mode="w", newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(["video_path", "vlm_result"])
-        writer.writerows(results)
-    print(f"🎉 Completed processing {samples_processed} samples and saved all results to {output_csv}")
