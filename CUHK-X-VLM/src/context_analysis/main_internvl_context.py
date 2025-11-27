@@ -3,9 +3,10 @@ import csv
 import pandas as pd
 from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
+from transformers import AutoModel, AutoTokenizer
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import qwenvl_inference
+from utils import internvl_inference
 import torch
 import argparse
 import traceback
@@ -15,50 +16,51 @@ def read_csv_file(csv_path):
     Read a CSV file and return the content as a list of rows.
     """
     data = []
-    base_path = "/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/"
     try:
         with open(csv_path, 'r', encoding='utf-8') as f:
             reader = csv.reader(f)
-            header = next(reader)  # skip header
+            header = next(reader)  # 跳过表头
             for row in reader:
-                if len(row) >= 3:
-                    path = os.path.join(base_path, row[0])
+                if len(row) >= 3:  
+                    path = row[0]
                     logic = row[1]
                     candidate = row[2]
                     data.append([path, logic, candidate])
                 else:
                     print(f"警告: 行数据不完整: {row}")
+            
     except Exception as e:
         print(f"读取CSV文件时出错: {e}")
         traceback.print_exc()
+        
     return data
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='qwenvl', help='Model name')
-    parser.add_argument('--model_size', type=str, default='7B', help='Model size: 7B or 3B')
+    parser.add_argument('--model', type=str, default='internvl', help='Model name')
+    parser.add_argument('--model_size', type=str, default='8B', help='Model size: 7B or 3B')
     parser.add_argument('--modality', type=str, default='rgb', help='depth, rgb, ir')
     args = parser.parse_args()
 
     model = args.model
-    model_size = args.model_size
-    modality = args.modality
+    model_size = args.model_size  
+    modality = args.modality  
+
     if modality == 'rgb':
-        test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_RGB_Emotion.csv'
+        test_csv_path = 'GT_folder/LM_RGB_Emotion.csv'
     elif modality == 'ir':
-        test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_IR_Emotion.csv'
+        test_csv_path = 'GT_folder/LM_IR_Emotion.csv'
     elif modality == 'depth':
-        test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_Depth_Emotion.csv'
+        test_csv_path = 'GT_folder/LM_Depth_Emotion.csv'
     elif modality == 'thermal':
-        test_csv_path = '/aiot-nvme-15T-x2-hk01/siyang/CUHK-X-Final/GT_folder/LM_Thermal_Emotion.csv'
-        
+        test_csv_path = 'GT_folder/LM_Thermal_Emotion.csv'
+
     test_data = read_csv_file(test_csv_path)
     print(f"Loaded {len(test_data)} samples from {test_csv_path}")
     
-    output_csv = f'CUHK-X-VLM/src/task_emotion/predictions/{modality}/pred_qwenvl{model_size}.csv'
+    output_csv = f'CUHK-X-VLM/src/context_analysis/predictions/{modality}/pred_internvl{model_size}.csv'
     
-    # check if output file exists
+    # 检查是否已有输出文件并加载已处理的结果
     results = []
     processed_paths = []
     start_idx = 0
@@ -66,22 +68,24 @@ if __name__ == "__main__":
         print(f"找到已有的输出文件: {output_csv}")
         with open(output_csv, mode="r", newline='') as f:
             reader = csv.reader(f)
-            header = next(reader)
+            header = next(reader)  
             for row in reader:
-                if len(row) >= 3:
+                if len(row) >= 3:  
                     path = row[0]
                     processed_paths.append(path)
                     results.append(row)
         start_idx = len(processed_paths)
         print(f"已经处理了 {start_idx} 个样本，将从第 {start_idx+1} 个样本继续")
 
-    # initialize model
-    model_path = f"Qwen/Qwen2.5-VL-{model_size}-Instruct"
-    processor = AutoProcessor.from_pretrained(model_path)
-    model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-        model_path, torch_dtype="auto", device_map="auto"
-    )
-
+    # initialize vlm
+    model_path = f"Models/InternVL3-{model_size}"
+    model = AutoModel.from_pretrained(
+        model_path,
+        torch_dtype=torch.bfloat16,
+        low_cpu_mem_usage=True,
+        trust_remote_code=True).eval().cuda()
+    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, use_fast=False)
+    
     prompt = "Question: What emotion does the person experience while performing the activities? Options: "
 
     idx = 1
@@ -89,26 +93,26 @@ if __name__ == "__main__":
         if i < start_idx:  # 跳过已处理的样本
             continue
         print(row)
-        
+
         if idx >= 100:  # 添加100个样本的限制
             print("已处理100个样本，停止处理")
             break 
-
+              
         video_path = row[0]
         logic = row[1]
         candidate = row[2]
-        
+
         # 处理 candidate 可能为空或只有一个选项的情况
-        # CSV文件中应该不会有NaN问题，但仍处理空字符串情况
         candidate_options = candidate.split(',') if candidate else []
         option_a = candidate_options[0].strip() if len(candidate_options) > 0 else ""
         option_b = candidate_options[1].strip() if len(candidate_options) > 1 else ""
 
+
         print(f"Row {i+1}:")
         print(f"  Path: {video_path}")
         print(f"  Logic: {logic}")
-        print(f"  Option A: {option_a}")
-        print(f"  Option B: {option_b}")
+        print(f"  Opions: {option_a}")
+        print(f"  Opions: {option_b}")
         print("-" * 50)
     
         # 根据是否有选项 B 来构建查询
@@ -123,7 +127,7 @@ if __name__ == "__main__":
         print(f"  Query: {query}")
 
         try:
-            res = qwenvl_inference(video_path, query, model, processor)
+            res = internvl_inference(video_path, query, model, tokenizer)
             print(video_path)
             print(res)
         except torch.cuda.OutOfMemoryError:

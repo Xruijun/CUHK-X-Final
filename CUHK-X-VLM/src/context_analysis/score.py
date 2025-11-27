@@ -69,7 +69,7 @@ if __name__ == "__main__":
     method = args.method 
     modality = args.modality  # 'depth', 'rgb', 'ir' 
    
-    csv_path = f"CUHK-X-VLM/src/task_emotion/predictions/{modality}/pred_{method}.csv"
+    csv_path = f"CUHK-X-VLM/src/context_analysis/predictions/{modality}/pred_{method}.csv"
     print(f"Calculating accuracy for {csv_path}...")
     
     # Calculate accuracy - 传入method参数
@@ -80,10 +80,10 @@ if __name__ == "__main__":
     print(f"Accuracy: {accuracy:.4f} ({correct}/{total}, {accuracy*100:.2f}%)")
 
     # Create directory if it doesn't exist
-    os.makedirs(f"src/task_emotion/scores/{modality}", exist_ok=True)
+    os.makedirs(f"src/context_analysis/scores/{modality}", exist_ok=True)
     
     # Save accuracy to CSV file
-    output_csv = f"CUHK-X-VLM/src/task_emotion/scores/{modality}/{method}_accuracy.csv"
+    output_csv = f"CUHK-X-VLM/src/context_analysis/scores/{modality}/{method}_accuracy.csv"
     with open(output_csv, 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow(["Model", "Accuracy", "Correct", "Total"])
