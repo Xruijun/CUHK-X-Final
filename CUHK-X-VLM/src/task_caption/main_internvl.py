@@ -46,19 +46,19 @@ if __name__ == "__main__":
     process_num = 2000  # 处理的样本数量限制
 
     if modality == 'thermal':
-        print("Using depth modality")
+        print("Using thermal modality")
         data_dir = "LM_video/Thermal"
     elif modality == 'rgb':
         print("Using RGB modality")
         data_dir = "LM_video/RGB"
     elif modality == 'ir':
-        print("Using RGB modality")
+        print("Using IR modality")
         data_dir = "LM_video/IR"
     elif modality == 'depth':
-        print("Using RGB modality")
+        print("Using Depth modality")
         data_dir = "LM_video/Depth"
     else:
-        raise ValueError("Invalid modality. Choose from 'depth', 'rgb', or 'ir'.")
+        raise ValueError("Invalid modality. Choose from 'depth', 'rgb', 'thermal' or 'ir'.")
 
     file_list = os.listdir(data_dir)
 
@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
 
     # initialize vlm
-    model_path = f"Models/InternVL3-{model_size}"
+    model_path = f"Models/InternVL2-{model_size}"
     model = AutoModel.from_pretrained(
         model_path,
         torch_dtype=torch.bfloat16,

@@ -29,7 +29,6 @@ def read_xlsx_to_dict(csv_path):
     Adds a fixed base path to each video path.
     """
     data = {}
-    base_path = "/aiot-nvme-15T-x2-hk01/siyang/CUHK-X/"
     try:
         # 读取CSV文件（假设与Excel结构相同：第一列是视频路径，第二列是字幕）
         df = pd.read_csv(csv_path, encoding='utf-8')
@@ -37,8 +36,8 @@ def read_xlsx_to_dict(csv_path):
         if len(df.columns) >= 2:
             for index, row in df.iterrows():
                 # 在视频路径前添加基础路径
-                video_path = os.path.join(base_path, str(row.iloc[0]))
-                data[video_path] = str(row.iloc[1])
+                video_path = row.iloc[0]
+                data[video_path] = row.iloc[1]
         else:
             print(f"CSV文件 {csv_path} 格式不正确，至少需要两列")
     except Exception as e:
@@ -48,15 +47,6 @@ def read_xlsx_to_dict(csv_path):
 
 
 def calculate_bleu(pred_list, gt_list):
-    """
-    计算BLEU分数
-    """
-    # 确保NLTK数据已下载
-    try:
-        nltk.data.find('tokenizers/punkt')
-    except LookupError:
-        nltk.download('punkt')
-    
     # 使用平滑函数避免零分问题
     smoothing = SmoothingFunction().method1
     
@@ -150,7 +140,9 @@ if __name__ == "__main__":
     print(f"Average BERTScore R: {avg_R:.4f}")
     print(f"Average BERTScore F1: {avg_F1:.4f}")
 
-        # Compute METEOR scores
+    # Compute METEOR scores
+    if not nltk.data.find('tokenizers/punkt'):
+        nltk.download(['punkt', 'wordnet', 'omw-1.4'])
     meteor_scores = []
     for pred, gt in zip(pred_list, gt_list):
         # Tokenize both strings
